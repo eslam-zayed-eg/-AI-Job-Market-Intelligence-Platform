@@ -7,14 +7,16 @@ AI Job Market Intelligence Platform
      salaries in different currencies must not be mixed).
   2. Rebuilds the 4 SQL Server tables:
         companies, skills, jobs_normalized, job_skills
-  3. Retrains the job-family classifier (TF-IDF + Logistic Regression) and
-     saves the model, the vectorizer and data/processed/model_metrics.json.
+  3. Retrains the job-family classifier (TF-IDF + LinearSVC), reports 5-fold
+     cross-validation, and saves the model, the vectorizer and
+     data/processed/model_metrics.json.
 
 Usage (from the project root):
     python src/update_all.py                  # everything, UK jobs
     python src/update_all.py --country us     # another country
     python src/update_all.py --skip-sql       # only retrain the model
     python src/update_all.py --skip-model     # only refresh SQL
+    python src/update_all.py --use-title      # add the job title as a feature
 
 Local-only dependencies (not needed by the GitHub Action):
     python -m pip install scikit-learn sqlalchemy pyodbc joblib
@@ -148,15 +150,22 @@ def update_sql(df: pd.DataFrame) -> None:
 # Model
 # ============================================================
 
-def train_model(df: pd.DataFrame, country: str) -> None:
+def train_model(df: pd.DataFrame, country: str, use_title: bool = False) -> None:
+    """
+    Description-only classifier by default (the honest task). With use_title=True
+    the job title is added to the text: much higher scores, but the title usually
+    contains the very words used to find the job, so it is an easier question.
+    """
     print("\n--- Retraining the classifier ---")
     import joblib
+    from sklearn.base import clone
     from sklearn.feature_extraction.text import TfidfVectorizer
-    from sklearn.linear_model import LogisticRegression
     from sklearn.metrics import accuracy_score, classification_report
-    from sklearn.model_selection import train_test_split
+    from sklearn.model_selection import StratifiedKFold, cross_validate, train_test_split
+    from sklearn.pipeline import make_pipeline
+    from sklearn.svm import LinearSVC
 
-    data = df.dropna(subset=["description", "search_keyword"])
+    data = df.dropna(subset=["description", "search_keyword"]).copy()
 
     # The same ad reposted in many cities would appear in both train and test
     # and inflate the score, so identical postings are counted once.
@@ -169,43 +178,65 @@ def train_model(df: pd.DataFrame, country: str) -> None:
     dropped_classes = sorted(set(counts.index) - set(keep))
     data = data[data["search_keyword"].isin(keep)]
 
+    if use_title:
+        X = data["title"].fillna("") + " . " + data["description"]
+        features = "title + description"
+    else:
+        X = data["description"]
+        features = "description only"
+    y = data["search_keyword"]
+
+    print(f"  Features: {features}")
     print(f"  Training data: {len(data):,} postings "
-          f"({removed:,} repeated postings removed, {data['search_keyword'].nunique()} classes)")
+          f"({removed:,} repeated postings removed, {y.nunique()} classes)")
     if dropped_classes:
         print(f"  Skipped classes with <{MIN_SAMPLES_PER_CLASS} samples: {dropped_classes}")
 
-    X, y = data["description"], data["search_keyword"]
+    pipeline = make_pipeline(
+        TfidfVectorizer(max_features=5000, stop_words="english",
+                        ngram_range=(1, 2), sublinear_tf=True),
+        LinearSVC(C=0.5, class_weight="balanced"),
+    )
+
+    # 1) Cross-validation: the honest headline number (average of 5 splits)
+    cv = StratifiedKFold(n_splits=5, shuffle=True, random_state=42)
+    scores = cross_validate(pipeline, X, y, cv=cv,
+                            scoring={"accuracy": "accuracy", "macro_f1": "f1_macro"})
+    cv_acc, cv_std = scores["test_accuracy"].mean(), scores["test_accuracy"].std()
+    cv_f1 = scores["test_macro_f1"].mean()
+    print(f"\n  5-fold cross-validation: accuracy {cv_acc:.2%} (+/- {cv_std:.2%}), "
+          f"macro-F1 {cv_f1:.3f}")
+
+    # 2) One hold-out split, only to see the per-class breakdown
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=0.2, random_state=42, stratify=y
     )
-
-    vectorizer = TfidfVectorizer(max_features=500, stop_words="english", ngram_range=(1, 2))
-    X_train_tfidf = vectorizer.fit_transform(X_train)
-    X_test_tfidf = vectorizer.transform(X_test)
-
-    model = LogisticRegression(max_iter=1000)
-    model.fit(X_train_tfidf, y_train)
-
-    y_pred = model.predict(X_test_tfidf)
-    accuracy = accuracy_score(y_test, y_pred)
+    holdout_model = clone(pipeline).fit(X_train, y_train)
+    y_pred = holdout_model.predict(X_test)
+    holdout_acc = accuracy_score(y_test, y_pred)
     report = classification_report(y_test, y_pred, output_dict=True, zero_division=0)
 
-    print(f"\n  Accuracy: {accuracy:.2%}  (on {len(y_test)} held-out postings)\n")
+    print(f"  Hold-out split: accuracy {holdout_acc:.2%} on {len(y_test)} postings\n")
     print(classification_report(y_test, y_pred, zero_division=0))
 
-    joblib.dump(model, MODEL_FILE)
-    joblib.dump(vectorizer, VECTORIZER_FILE)
+    # 3) Final model: trained on ALL the data and saved
+    final = clone(pipeline).fit(X, y)
+    joblib.dump(final[-1], MODEL_FILE)       # the classifier
+    joblib.dump(final[0], VECTORIZER_FILE)   # the TF-IDF vectorizer
 
     metrics = {
         "trained_at": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "country": country,
-        "accuracy": round(float(accuracy), 4),
-        "macro_f1": round(float(report["macro avg"]["f1-score"]), 4),
-        "n_train": int(len(y_train)),
-        "n_test": int(len(y_test)),
+        "features": features,
+        "model": "TF-IDF (5000 features, 1-2 grams) + LinearSVC (balanced)",
+        "cv_accuracy": round(float(cv_acc), 4),
+        "cv_accuracy_std": round(float(cv_std), 4),
+        "cv_macro_f1": round(float(cv_f1), 4),
+        "holdout_accuracy": round(float(holdout_acc), 4),
+        "n_postings": int(len(y)),
         "n_classes": int(y.nunique()),
         "repeated_postings_removed": int(removed),
-        "f1_per_class": {
+        "f1_per_class_holdout": {
             label: round(float(report[label]["f1-score"]), 4) for label in sorted(y.unique())
         },
     }
@@ -222,6 +253,8 @@ def main() -> None:
     parser.add_argument("--country", default="gb", help="country code to use (default: gb)")
     parser.add_argument("--skip-sql", action="store_true", help="do not touch SQL Server")
     parser.add_argument("--skip-model", action="store_true", help="do not retrain the model")
+    parser.add_argument("--use-title", action="store_true",
+                        help="also use the job title as a feature (easier task, higher score)")
     args = parser.parse_args()
 
     df = load_jobs(args.country)
@@ -229,7 +262,7 @@ def main() -> None:
     if not args.skip_sql:
         update_sql(df)
     if not args.skip_model:
-        train_model(df, args.country)
+        train_model(df, args.country, use_title=args.use_title)
 
     print("\nDone.")
 

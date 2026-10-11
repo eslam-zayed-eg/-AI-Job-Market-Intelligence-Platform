@@ -1,0 +1,8 @@
+config,accuracy,accuracy_std,macro_f1,seconds
+"G. title + description, 5000 feat, LinearSVC, balanced",0.9277,0.0074,0.919,3.1346
+"F. title + description, 2000 feat, LR, balanced",0.9162,0.0097,0.9069,3.7143
+"E. 5000 feat, LinearSVC, balanced, sublinear tf",0.7634,0.021,0.7513,3.0674
+"D. 5000 feat, LR C=10, balanced, sublinear tf",0.7619,0.019,0.7512,6.7111
+"C. 2000 feat, LR, balanced classes",0.753,0.0207,0.7443,3.7842
+"B. 2000 feat, LR",0.7381,0.0157,0.7259,4.1091
+"A. baseline (current): 500 feat, LR",0.7284,0.0236,0.7158,3.1377
