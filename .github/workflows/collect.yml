@@ -1,0 +1,50 @@
+name: Collect job data
+
+on:
+  schedule:
+    - cron: "0 6 * * *"      # every day at 06:00 UTC
+  workflow_dispatch:          # also lets you run it manually from the Actions tab
+
+permissions:
+  contents: write             # needed so the workflow can commit the updated data
+
+concurrency:
+  group: collect-jobs         # never run two collections at the same time
+  cancel-in-progress: false
+
+jobs:
+  collect:
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "3.11"
+          cache: pip
+
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+
+      - name: Collect new jobs
+        run: python src/collect.py
+        env:
+          ADZUNA_APP_ID: ${{ secrets.ADZUNA_APP_ID }}
+          ADZUNA_APP_KEY: ${{ secrets.ADZUNA_APP_KEY }}
+          MAX_REQUESTS_PER_RUN: "80"
+
+      - name: Commit updated data
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add data/processed/jobs_master.csv data/processed/jobs_for_dashboard.csv data/collection_state.json
+          if git diff --cached --quiet; then
+            echo "No data changes to commit."
+          else
+            git commit -m "chore(data): daily collection $(date -u +%F)"
+            git push
+          fi
