@@ -1,0 +1,35 @@
+skill,postings,share_of_postings_%,avg_salary_min,median_salary_min,postings_with_salary
+Machine Learning,170,6.3,71149.0,64500.0,170.0
+Azure,148,5.5,70999.0,61261.0,148.0
+Python,137,5.1,75859.0,69627.0,137.0
+AWS,125,4.7,75362.0,67653.0,125.0
+React,85,3.2,75786.0,70000.0,85.0
+SQL,82,3.1,58204.0,57651.0,82.0
+Java,74,2.8,72457.0,70000.0,74.0
+Agile,62,2.3,68043.0,60214.0,62.0
+Kubernetes,38,1.4,77371.0,70831.0,38.0
+Power BI,34,1.3,51819.0,59978.0,34.0
+ETL,31,1.2,73342.0,70000.0,31.0
+GCP,27,1.0,83438.0,80000.0,27.0
+Docker,21,0.8,63662.0,60000.0,21.0
+Git,19,0.7,,,
+Linux,18,0.7,,,
+Node.js,17,0.6,,,
+Snowflake,17,0.6,,,
+Excel,14,0.5,,,
+PostgreSQL,10,0.4,,,
+Airflow,9,0.3,,,
+NLP,9,0.3,,,
+PyTorch,9,0.3,,,
+Spark,8,0.3,,,
+Deep Learning,6,0.2,,,
+Django,5,0.2,,,
+MongoDB,5,0.2,,,
+TensorFlow,5,0.2,,,
+Scrum,5,0.2,,,
+Tableau,4,0.1,,,
+REST API,4,0.1,,,
+Scala,3,0.1,,,
+Flask,2,0.1,,,
+MySQL,2,0.1,,,
+Looker,1,0.0,,,
