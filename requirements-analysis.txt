@@ -1,0 +1,9 @@
+# Extra dependencies for the SQL, model, statistics and notebook steps.
+# Install together with requirements.txt:
+#   python -m pip install -r requirements.txt -r requirements-analysis.txt
+scikit-learn
+sqlalchemy
+pyodbc
+joblib
+matplotlib
+jupyter

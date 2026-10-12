@@ -19,6 +19,7 @@ from __future__ import annotations
 import argparse
 import sys
 from pathlib import Path
+from typing import Tuple
 
 import pandas as pd
 
@@ -27,6 +28,39 @@ from collect import PROCESSED_DIR  # noqa: E402
 from update_all import load_jobs  # noqa: E402
 
 MIN_SALARY_SAMPLES = 20
+
+
+def compute(df: pd.DataFrame) -> Tuple[pd.DataFrame, pd.DataFrame, int, int]:
+    """
+    Returns (demand, pay, total_postings, postings_with_a_skill).
+    `df` must contain a `skill_list` column (as produced by update_all.load_jobs).
+    """
+    total = len(df)
+
+    exploded = df[["job_id", "skill_list"]].explode("skill_list").dropna(subset=["skill_list"])
+    demand = (
+        exploded.groupby("skill_list")["job_id"].nunique()
+        .sort_values(ascending=False)
+        .rename("postings")
+        .to_frame()
+    )
+    demand["share_of_postings_%"] = (demand["postings"] / total * 100).round(1) if total else 0.0
+    demand.index.name = "skill"
+    with_skill = int(exploded["job_id"].nunique())
+
+    salaries = df[["job_id", "salary_min", "skill_list"]].dropna(subset=["salary_min"])
+    salaries = salaries.explode("skill_list").dropna(subset=["skill_list"])
+    pay = (
+        salaries.groupby("skill_list")["salary_min"]
+        .agg(avg_salary_min="mean", median_salary_min="median", postings_with_salary="count")
+        .round(0)
+    )
+    pay = pay[pay["postings_with_salary"] >= MIN_SALARY_SAMPLES].sort_values(
+        "avg_salary_min", ascending=False
+    )
+    pay.index.name = "skill"
+
+    return demand, pay, total, with_skill
 
 
 def main() -> None:
@@ -42,42 +76,21 @@ def main() -> None:
         df = df.drop_duplicates(subset=["company", "title", "description"])
         print(f"Repeated postings counted once: {before:,} -> {len(df):,}")
 
-    currency = df["currency"].dropna().iloc[0] if "currency" in df and df["currency"].notna().any() else "?"
-    total = len(df)
+    currency = "?"
+    if "currency" in df.columns and df["currency"].notna().any():
+        currency = df["currency"].dropna().iloc[0]
+
+    demand, pay, total, with_skill = compute(df)
     print(f"\n{total:,} postings | country={args.country} | salary currency={currency}")
-
-    # ---------- Skill demand ----------
-    exploded = df[["job_id", "skill_list"]].explode("skill_list").dropna(subset=["skill_list"])
-    demand = (
-        exploded.groupby("skill_list")["job_id"].nunique()
-        .sort_values(ascending=False)
-        .rename("postings")
-        .to_frame()
-    )
-    demand["share_of_postings_%"] = (demand["postings"] / total * 100).round(1)
-    demand.index.name = "skill"
-
-    with_skill = exploded["job_id"].nunique()
-    print(f"Postings mentioning at least one tracked skill: {with_skill:,} ({with_skill / total:.0%})")
+    print(f"Postings mentioning at least one tracked skill: {with_skill:,} "
+          f"({with_skill / max(total, 1):.0%})")
 
     print("\n=== Top 15 skills by number of postings ===")
     print(demand.head(15).to_string())
 
-    # ---------- Salary by skill ----------
-    salaries = df[["job_id", "salary_min", "skill_list"]].dropna(subset=["salary_min"])
-    salaries = salaries.explode("skill_list").dropna(subset=["skill_list"])
-    pay = (
-        salaries.groupby("skill_list")["salary_min"]
-        .agg(avg_salary_min="mean", median_salary_min="median", postings_with_salary="count")
-        .round(0)
-    )
-    pay = pay[pay["postings_with_salary"] >= MIN_SALARY_SAMPLES].sort_values("avg_salary_min", ascending=False)
-    pay.index.name = "skill"
-
     print(f"\n=== Average salary_min by skill (only skills with >= {MIN_SALARY_SAMPLES} salaried postings) ===")
     print(pay.to_string())
 
-    # ---------- Job families ----------
     print("\n=== Postings per job family ===")
     print(df["search_keyword"].value_counts().to_string())
 

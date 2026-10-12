@@ -124,7 +124,7 @@ def get_engine():
     return sa.create_engine(url, **kwargs)
 
 
-def update_sql(df: pd.DataFrame) -> None:
+def update_sql(df: pd.DataFrame) -> dict:
     print("\n--- Updating SQL tables ---")
     companies, skills, jobs, links = build_tables(df)
     engine = get_engine()
@@ -135,15 +135,18 @@ def update_sql(df: pd.DataFrame) -> None:
         "jobs_normalized": jobs,
         "job_skills": links,
     }
+    counts = {}
     try:
         for name, table in tables.items():
             table.to_sql(name, con=engine, if_exists="replace", index=False, chunksize=500)
+            counts[name] = len(table)
             print(f"  {name:<16} {len(table):>7,} rows")
     except Exception as exc:  # noqa: BLE001 - show a friendly hint, keep the real error
         print("\nSQL update failed. Check that SQL Server is running and the database "
               "'JobMarketDB' exists.")
         raise exc
     print("SQL database updated.")
+    return counts
 
 
 # ============================================================
