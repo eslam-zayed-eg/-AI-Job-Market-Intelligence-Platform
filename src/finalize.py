@@ -57,6 +57,20 @@ CURRENCY_SYMBOL = {"GBP": "\u00a3", "USD": "$", "CAD": "CA$", "AUD": "A$"}
 # Statistics
 # ============================================================
 
+def parse_timestamps(frame: pd.DataFrame, column: str) -> pd.Series:
+    """
+    Parse ISO timestamps that may mix formats (with and without fractional
+    seconds). Plain pandas learns the format from the first row and turns every
+    row that does not match into NaT, which silently shrinks the date range.
+    """
+    if column not in frame.columns:
+        return pd.Series(pd.NaT, index=frame.index, dtype="datetime64[ns, UTC]")
+    try:
+        return pd.to_datetime(frame[column], errors="coerce", utc=True, format="ISO8601")
+    except (TypeError, ValueError):  # very old pandas without format="ISO8601"
+        return pd.to_datetime(frame[column], errors="coerce", utc=True)
+
+
 def collection_overview() -> Dict[str, Any]:
     """Numbers about the whole master dataset (all countries)."""
     raw = pd.read_csv(MASTER_FILE, dtype={"job_id": str}, encoding="utf-8-sig")
@@ -69,8 +83,8 @@ def collection_overview() -> Dict[str, Any]:
     for extra in counts.index:
         per_country.setdefault(extra, int(counts[extra]))
 
-    first = pd.to_datetime(raw.get("first_seen"), errors="coerce", utc=True)
-    last = pd.to_datetime(raw.get("last_seen"), errors="coerce", utc=True)
+    first = parse_timestamps(raw, "first_seen")
+    last = parse_timestamps(raw, "last_seen")
 
     def day(value) -> Optional[str]:
         return None if pd.isna(value) else str(value.date())

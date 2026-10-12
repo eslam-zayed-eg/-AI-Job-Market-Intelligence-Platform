@@ -1,5 +1,5 @@
 {
-  "trained_at": "2026-10-11T13:37:03+00:00",
+  "trained_at": "2026-10-12T04:32:24+00:00",
   "country": "gb",
   "features": "description only",
   "model": "TF-IDF (5000 features, 1-2 grams) + LinearSVC (balanced)",

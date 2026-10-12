@@ -31,7 +31,51 @@ flowchart LR
 ## Results snapshot
 
 <!-- STATS:START -->
-_Run `python src/finalize.py` to generate this block._
+_Generated automatically by `python src/finalize.py` on 2026-10-12. Do not edit this block by hand._
+
+| Metric | Value |
+|---|---|
+| Postings collected (all countries) | **7,990** |
+| Postings per country | United Kingdom 3,180 · United States 2,397 · Canada 2,263 · Australia 150 |
+| Collection window | 2026-09-21 to 2026-10-11 (2 collection day(s)) |
+| Job families · countries · tracked skills | 16 · 4 · 35 |
+| United Kingdom: postings in the SQL database | 3,180 from 1,189 employers |
+| United Kingdom: unique postings used for analysis | 2,684 (repeated adverts counted once) |
+| SQL tables (JobMarketDB) | companies 1,189 · jobs_normalized 3,180 · skills 35 · job_skills 1,361  _(SQL status: skipped)_ |
+| Classifier (description only) | **76.3% ± 2.1%** 5-fold CV accuracy · macro-F1 0.751 · 16 classes · 2,684 postings |
+
+**Most requested skills (United Kingdom, unique postings).** 751 of 2,684 postings (28%) mention at least one tracked skill.
+
+| Skill | Postings | Share of postings |
+|---|---:|---:|
+| Machine Learning | 170 | 6.3% |
+| Azure | 148 | 5.5% |
+| Python | 137 | 5.1% |
+| AWS | 125 | 4.7% |
+| React | 85 | 3.2% |
+| SQL | 82 | 3.1% |
+| Java | 74 | 2.8% |
+| Agile | 62 | 2.3% |
+| Kubernetes | 38 | 1.4% |
+| Power BI | 34 | 1.3% |
+
+**Salary by skill (United Kingdom, advertised minimum, GBP).** Only skills with at least 20 salaried postings are shown.
+
+| Skill | Average | Median | Salaried postings |
+|---|---:|---:|---:|
+| GCP | £83,438 | £80,000 | 27 |
+| Kubernetes | £77,371 | £70,831 | 38 |
+| Python | £75,859 | £69,627 | 137 |
+| React | £75,786 | £70,000 | 85 |
+| AWS | £75,362 | £67,653 | 125 |
+| ETL | £73,342 | £70,000 | 31 |
+| Java | £72,457 | £70,000 | 74 |
+| Machine Learning | £71,149 | £64,500 | 170 |
+| Azure | £70,999 | £61,261 | 148 |
+| Agile | £68,043 | £60,214 | 62 |
+| Docker | £63,662 | £60,000 | 21 |
+| SQL | £58,204 | £57,651 | 82 |
+| Power BI | £51,819 | £59,978 | 34 |
 <!-- STATS:END -->
 
 ---

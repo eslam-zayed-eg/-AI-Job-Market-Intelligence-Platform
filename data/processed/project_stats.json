@@ -1,0 +1,193 @@
+{
+  "generated_at": "2026-10-12T04:36:05+00:00",
+  "analysis_country": "gb",
+  "currency": "GBP",
+  "postings_total": 7990,
+  "postings_per_country": {
+    "gb": 3180,
+    "us": 2397,
+    "ca": 2263,
+    "au": 150
+  },
+  "first_collected": "2026-09-21",
+  "last_seen": "2026-10-11",
+  "collection_days": 2,
+  "job_families": 16,
+  "countries": 4,
+  "skills_tracked": 35,
+  "analysis_postings": 3180,
+  "analysis_unique_postings": 2684,
+  "employers": 1189,
+  "postings_with_skill": 751,
+  "postings_with_skill_pct": 28.0,
+  "sql_tables": {
+    "companies": 1189,
+    "skills": 35,
+    "jobs_normalized": 3180,
+    "job_skills": 1361
+  },
+  "sql_status": "skipped",
+  "model": {
+    "trained_at": "2026-10-12T04:32:24+00:00",
+    "country": "gb",
+    "features": "description only",
+    "model": "TF-IDF (5000 features, 1-2 grams) + LinearSVC (balanced)",
+    "cv_accuracy": 0.7634,
+    "cv_accuracy_std": 0.021,
+    "cv_macro_f1": 0.7513,
+    "holdout_accuracy": 0.7784,
+    "n_postings": 2684,
+    "n_classes": 16,
+    "repeated_postings_removed": 496,
+    "f1_per_class_holdout": {
+      "AI engineer": 0.8267,
+      "analytics engineer": 0.6182,
+      "backend developer": 0.65,
+      "business analyst": 0.9053,
+      "business intelligence analyst": 0.8889,
+      "cloud engineer": 0.8605,
+      "cybersecurity engineer": 0.6849,
+      "data analyst": 0.8,
+      "data architect": 0.9412,
+      "data engineer": 0.8261,
+      "data scientist": 0.6377,
+      "devops engineer": 0.7925,
+      "frontend developer": 0.6512,
+      "full stack developer": 0.7869,
+      "machine learning engineer": 0.7105,
+      "software engineer": 0.7473
+    }
+  },
+  "top_skills": [
+    {
+      "skill": "Machine Learning",
+      "postings": 170,
+      "share_pct": 6.3
+    },
+    {
+      "skill": "Azure",
+      "postings": 148,
+      "share_pct": 5.5
+    },
+    {
+      "skill": "Python",
+      "postings": 137,
+      "share_pct": 5.1
+    },
+    {
+      "skill": "AWS",
+      "postings": 125,
+      "share_pct": 4.7
+    },
+    {
+      "skill": "React",
+      "postings": 85,
+      "share_pct": 3.2
+    },
+    {
+      "skill": "SQL",
+      "postings": 82,
+      "share_pct": 3.1
+    },
+    {
+      "skill": "Java",
+      "postings": 74,
+      "share_pct": 2.8
+    },
+    {
+      "skill": "Agile",
+      "postings": 62,
+      "share_pct": 2.3
+    },
+    {
+      "skill": "Kubernetes",
+      "postings": 38,
+      "share_pct": 1.4
+    },
+    {
+      "skill": "Power BI",
+      "postings": 34,
+      "share_pct": 1.3
+    }
+  ],
+  "salary_by_skill": [
+    {
+      "skill": "GCP",
+      "avg": 83438,
+      "median": 80000,
+      "postings": 27
+    },
+    {
+      "skill": "Kubernetes",
+      "avg": 77371,
+      "median": 70831,
+      "postings": 38
+    },
+    {
+      "skill": "Python",
+      "avg": 75859,
+      "median": 69627,
+      "postings": 137
+    },
+    {
+      "skill": "React",
+      "avg": 75786,
+      "median": 70000,
+      "postings": 85
+    },
+    {
+      "skill": "AWS",
+      "avg": 75362,
+      "median": 67653,
+      "postings": 125
+    },
+    {
+      "skill": "ETL",
+      "avg": 73342,
+      "median": 70000,
+      "postings": 31
+    },
+    {
+      "skill": "Java",
+      "avg": 72457,
+      "median": 70000,
+      "postings": 74
+    },
+    {
+      "skill": "Machine Learning",
+      "avg": 71149,
+      "median": 64500,
+      "postings": 170
+    },
+    {
+      "skill": "Azure",
+      "avg": 70999,
+      "median": 61261,
+      "postings": 148
+    },
+    {
+      "skill": "Agile",
+      "avg": 68043,
+      "median": 60214,
+      "postings": 62
+    },
+    {
+      "skill": "Docker",
+      "avg": 63662,
+      "median": 60000,
+      "postings": 21
+    },
+    {
+      "skill": "SQL",
+      "avg": 58204,
+      "median": 57651,
+      "postings": 82
+    },
+    {
+      "skill": "Power BI",
+      "avg": 51819,
+      "median": 59978,
+      "postings": 34
+    }
+  ]
+}
